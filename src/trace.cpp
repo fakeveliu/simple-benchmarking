@@ -7,7 +7,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         for (size_t i = 0; i < n; ++i) {
 
         } 
-    }, 10000, 10, 5);
+    }, 10000, 10, 6);
     register_trace(trace_loop);
 
     Trace trace_threads("threads", [](size_t n) {
@@ -18,7 +18,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         for (int i = 0; i < n; ++i) {
             threads[i].join();
         }
-    }, 10, 10, 3);
+    }, 10, 10, 5);
     register_trace(trace_threads);
 }
 
