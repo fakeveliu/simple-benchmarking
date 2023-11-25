@@ -17,12 +17,14 @@ int main(int argc, char** argv) {
     CLI::App args{"Simple Trace App"};
 
     std::vector<std::string> trace_names;
+    bool time = false;
 
     args.add_option("--run-traces", trace_names, "Run specified traces");
+    args.add_flag("--time", time, "Use builtin timer");
 
     CLI11_PARSE(args, argc, argv);
 
     TraceDriver td(out_path);
-    td.run_traces(trace_names);
+    td.run_traces(trace_names, time);
     td.format_output();
 }

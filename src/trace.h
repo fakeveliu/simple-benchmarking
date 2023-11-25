@@ -27,7 +27,7 @@ class TraceDriver {
 public:
     TraceDriver(const std::string& out_path);
     using TraceResult = std::pair<std::string, std::vector<size_t>>;
-    void run_traces(std::vector<std::string>& user_traces);
+    void run_traces(std::vector<std::string>& user_traces, bool time);
     void format_output();
 
 private:
@@ -38,5 +38,6 @@ private:
     void register_trace(Trace& trace) {
         all_traces.emplace(trace.name_, trace);
     }
+    void run_trace(Trace& trace);
     void time_trace(Trace& trace);
 };
