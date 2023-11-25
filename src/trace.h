@@ -26,7 +26,7 @@ private:
 class TraceDriver {
 public:
     TraceDriver(const std::string& out_path);
-    using TraceResult = std::pair<std::string, std::vector<int>>;
+    using TraceResult = std::pair<std::string, std::vector<size_t>>;
     void run_traces(std::vector<std::string>& user_traces);
     void format_output();
 

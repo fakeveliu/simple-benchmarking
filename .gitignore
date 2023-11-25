@@ -2,3 +2,4 @@
 objs/
 *.txt
 app
+.DS_Store

@@ -7,7 +7,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         for (size_t i = 0; i < n; ++i) {
 
         } 
-    }, 10000, 10, 6);
+    }, 10000000000, 1, 1);
     register_trace(trace_loop);
 
     Trace trace_threads("threads", [](size_t n) {
@@ -55,7 +55,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
 void TraceDriver::time_trace(Trace& trace) {
     size_t n = trace.min_;
     size_t i = 0;
-    std::vector<int> data;
+    std::vector<size_t> data;
     while (i < trace.iterations_) {
         auto t0 = std::chrono::high_resolution_clock::now();
         trace.trace_(n);
