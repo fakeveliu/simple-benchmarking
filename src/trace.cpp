@@ -20,6 +20,36 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         }
     }, 10, 10, 5);
     register_trace(trace_threads);
+
+    Trace trace_memory_copy("memory_copy", [](size_t n) {
+        // big array copy: memory bandwidth and throughput
+        std::vector<int> src(n, 1);
+        std::vector<int> dest(n, 0); 
+
+        std::copy(src.begin(), src.end(), dest.begin());
+    }, 1000000, 2, 5);
+    register_trace(trace_memory_copy);
+
+    Trace trace_memory_sort("memory_sort", [](size_t n) {
+        // sort: computational capabilities and cache behavior
+        std::vector<int> data(n);
+        std::generate(data.begin(), data.end(), std::rand);
+        std::sort(data.begin(), data.end());
+    }, 10000, 2, 5);
+    register_trace(trace_memory_sort);
+
+    Trace trace_memory_search("memory_search", [](size_t n) {
+        // search: various memory access patterns
+        std::vector<int> data(n);
+        std::generate(data.begin(), data.end(), std::rand);
+        std::sort(data.begin(), data.end());
+
+        for (size_t i = 0; i < n; ++i) {
+            int target = std::rand() % n;
+            (void)std::binary_search(data.begin(), data.end(), target);
+        }
+    }, 10000, 2, 5);
+    register_trace(trace_memory_search);
 }
 
 void TraceDriver::time_trace(Trace& trace) {

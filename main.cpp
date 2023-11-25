@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 
     std::vector<std::string> trace_names;
 
-    auto traces_option = args.add_option("--run-traces", trace_names, "Run specified traces");
+    args.add_option("--run-traces", trace_names, "Run specified traces");
 
     CLI11_PARSE(args, argc, argv);
 
