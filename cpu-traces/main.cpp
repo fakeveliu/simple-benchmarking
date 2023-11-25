@@ -26,5 +26,5 @@ int main(int argc, char** argv) {
 
     TraceDriver td(out_path);
     td.run_traces(trace_names, time);
-    td.format_output();
+    // td.format_output();
 }
