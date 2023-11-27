@@ -2,12 +2,27 @@
 #include <iostream>
 #include <fstream>
 
+#define beginFunc(name) [](os_log_t& lh, os_signpost_id_t si) { os_signpost_interval_begin(lh, si, name); }
+#define endFunc(name) [](os_log_t& lh, os_signpost_id_t si) { os_signpost_interval_end(lh, si, name); }
+#define entry(name) {name, {beginFunc(name), endFunc(name)}}
+
+using signpostFunc = std::function<void(os_log_t&, os_signpost_id_t)>;
+const static std::unordered_map<std::string, std::pair<signpostFunc, signpostFunc>> signpostFuncs = {
+    entry("loop"),
+    entry("threads"),
+    entry("memory_copy"),
+    entry("memory_sort"),
+    entry("memory_search"),
+    entry("file_io"),
+};
+
+
 TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
     Trace trace_loop("loop", [](size_t n){
         for (size_t i = 0; i < n; ++i) {
             // dummy
         } 
-    }, 10000000000, 1, 1);
+    }, 6000000000, 1, 1);
     register_trace(trace_loop);
 
     Trace trace_threads("threads", [](size_t n) {
@@ -18,7 +33,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         for (int i = 0; i < n; ++i) {
             threads[i].join();
         }
-    }, 10, 10, 5);
+    }, 35000, 10, 1);
     register_trace(trace_threads);
 
     Trace trace_memory_copy("memory_copy", [](size_t n) {
@@ -27,7 +42,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         std::vector<int> dest(n, 0); 
 
         std::copy(src.begin(), src.end(), dest.begin());
-    }, 1000000, 2, 5);
+    }, 250000000, 2, 1);
     register_trace(trace_memory_copy);
 
     Trace trace_memory_sort("memory_sort", [](size_t n) {
@@ -35,7 +50,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         std::vector<int> data(n);
         std::generate(data.begin(), data.end(), std::rand);
         std::sort(data.begin(), data.end());
-    }, 1000000, 2, 5);
+    }, 60000000, 2, 1);
     register_trace(trace_memory_sort);
 
     Trace trace_memory_search("memory_search", [](size_t n) {
@@ -48,7 +63,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
             int target = std::rand() % n;
             (void)std::binary_search(data.begin(), data.end(), target);
         }
-    }, 1000000, 2, 5);
+    }, 10000000, 2, 1);
     register_trace(trace_memory_search);
 
     Trace trace_file_io("file_io", [](size_t n) {
@@ -73,7 +88,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
 
         // clean up
         std::remove(filename.c_str());
-    }, 1000000, 2, 5);
+    }, 5000000, 2, 1);
     register_trace(trace_file_io);
 }
 
@@ -96,6 +111,10 @@ void TraceDriver::time_trace(Trace& trace) {
 
 void TraceDriver::run_trace(Trace& trace) {
     // no timing overhead
+    os_log_t log_handle = os_log_create("my-benchmarker", OS_LOG_CATEGORY_POINTS_OF_INTEREST);
+    os_signpost_id_t signpost_id = os_signpost_id_generate(log_handle);
+    signpostFuncs.at(trace.name_).first(log_handle, signpost_id);
+    
     size_t n = trace.min_;
     size_t i = 0;
     while (i < trace.iterations_) {
@@ -103,6 +122,8 @@ void TraceDriver::run_trace(Trace& trace) {
         n *= trace.factor_;
         ++i;
     }
+
+    signpostFuncs.at(trace.name_).second(log_handle, signpost_id);
 }
 
 void TraceDriver::run_traces(std::vector<std::string>& user_traces, bool time) {

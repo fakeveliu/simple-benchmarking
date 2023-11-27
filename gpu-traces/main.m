@@ -6,7 +6,8 @@ const unsigned int N = 1 << 24;
 void addArrayGPU(NSArray<NSNumber *> *arr1, NSArray<NSNumber *> *arr2) {
     CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
 
-    id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+    NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
+    id<MTLDevice> device = [devices firstObject];
 
     // fifo queue for sending commands to the gpu
     id<MTLCommandQueue> commandQueue = [device newCommandQueue];
@@ -129,8 +130,8 @@ int main(int argc, const char * argv[]) {
     @autoreleasepool {
         NSArray<NSNumber *> *array1 = getRandomArray(N);
         NSArray<NSNumber *> *array2 = getRandomArray(N);
-        addArrayCPU(array1, array2);
         addArrayGPU(array1, array2);
+        addArrayCPU(array1, array2);
     }
     return 0;
 }

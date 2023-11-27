@@ -3,11 +3,13 @@
 #include <map>
 #include <vector>
 #include <thread>
+#include <os/signpost.h>
 
 class TraceDriver;
 
 class Trace {
 public:
+    
     Trace(const std::string& name, const std::function<void(size_t n)>& trace,
         size_t min, size_t factor, size_t iterations) : 
         name_(name), trace_(trace), min_(min), factor_(factor), iterations_(iterations) {}
@@ -38,6 +40,7 @@ private:
     void register_trace(Trace& trace) {
         all_traces.emplace(trace.name_, trace);
     }
+    
     void run_trace(Trace& trace);
     void time_trace(Trace& trace);
 };
