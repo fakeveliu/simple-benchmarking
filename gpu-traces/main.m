@@ -127,9 +127,9 @@ void recordPerformance(void) {
         N <<= 1;
     }
     
-    NSString *NString = [NValues componentsJoinedByString:@", "];
-    NSString *gpuTimeString = [gpuTimes componentsJoinedByString:@", "];
-    NSString *cpuTimeString = [cpuTimes componentsJoinedByString:@", "];
+    NSString *NString = [NValues componentsJoinedByString:@","];
+    NSString *gpuTimeString = [gpuTimes componentsJoinedByString:@","];
+    NSString *cpuTimeString = [cpuTimes componentsJoinedByString:@","];
     NSLog(@"add_array_gpu/%@/%@", NString, gpuTimeString);
     NSLog(@"add_array_cpu/%@/%@", NString, cpuTimeString);
 }
