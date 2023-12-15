@@ -1,10 +1,10 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 
-const unsigned int N = 1 << 24;
+const unsigned int LO = 22;
+const unsigned int NUM_ITER = 5;
 
-void addArrayGPU(NSArray<NSNumber *> *arr1, NSArray<NSNumber *> *arr2) {
-    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+void addArrayGPU(NSArray<NSNumber *> *arr1, NSArray<NSNumber *> *arr2, unsigned int N) {
 
     NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
     id<MTLDevice> device = [devices firstObject];
@@ -24,8 +24,6 @@ void addArrayGPU(NSArray<NSNumber *> *arr1, NSArray<NSNumber *> *arr2) {
     if (error) {
         NSLog(@"%@", error);
     }
-
-    NSLog(@"\nAdding arrays of size %d in GPU way", N);
 
     // Create the buffers to be sent to the gpu from our arrays
     float *arr1Elements = malloc(sizeof(float) * N);
@@ -70,27 +68,13 @@ void addArrayGPU(NSArray<NSNumber *> *arr1, NSArray<NSNumber *> *arr2) {
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
 
-    float *resultBufferPointer = (float *)[resultBuff contents];
-
-    // optionally, verify the first 5 results
-    for (NSInteger i = 0; i < 5; i++) {
-        NSLog(@"%f + %f = %f", arr1Elements[i], arr2Elements[i], resultBufferPointer[i]);
-    }
-
     // clean up
     free(arr1Elements);
     free(arr2Elements);
-
-    CFAbsoluteTime timeElapsed = CFAbsoluteTimeGetCurrent() - startTime;
-    NSLog(@"Time elapsed %.05f seconds", timeElapsed);
-    NSLog(@"");
 }
 
 
-void addArrayCPU(NSArray<NSNumber *> *arr1, NSArray<NSNumber *> *arr2) {
-    NSLog(@"Adding arrays of size %d in CPU way", N);
-    
-    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+void addArrayCPU(NSArray<NSNumber *> *arr1, NSArray<NSNumber *> *arr2, unsigned int N) {
 
     // initialize result array with zeros
     NSMutableArray<NSNumber *> *result = [NSMutableArray arrayWithCapacity:N];
@@ -102,15 +86,6 @@ void addArrayCPU(NSArray<NSNumber *> *arr1, NSArray<NSNumber *> *arr2) {
         float sum = [arr1[i] floatValue] + [arr2[i] floatValue];
         result[i] = @(sum);
     }
-    
-    // optionally, verify the first 5 results
-    for (NSInteger i = 0; i < 5; i++) {
-        NSLog(@"%@ + %@ = %@", arr1[i], arr2[i], result[i]);
-    }
-    
-    CFAbsoluteTime timeElapsed = CFAbsoluteTimeGetCurrent() - startTime;
-
-    NSLog(@"Time elapsed %.02f seconds", timeElapsed);
 }
 
 NSArray<NSNumber *> *getRandomArray(NSInteger count) {
@@ -126,12 +101,42 @@ NSArray<NSNumber *> *getRandomArray(NSInteger count) {
     return result;
 }
 
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
+void recordPerformance(void) {
+    unsigned int N = 1 << LO;
+    
+    NSMutableArray *NValues = [NSMutableArray arrayWithCapacity:NUM_ITER];
+    NSMutableArray *gpuTimes = [NSMutableArray arrayWithCapacity:NUM_ITER];
+    NSMutableArray *cpuTimes = [NSMutableArray arrayWithCapacity:NUM_ITER];
+
+    
+    for (NSInteger i = 0; i < NUM_ITER; i++) {
         NSArray<NSNumber *> *array1 = getRandomArray(N);
         NSArray<NSNumber *> *array2 = getRandomArray(N);
-        addArrayGPU(array1, array2);
-        addArrayCPU(array1, array2);
+        
+        CFAbsoluteTime startGPU = CFAbsoluteTimeGetCurrent();
+        addArrayGPU(array1, array2, N);
+        CFAbsoluteTime endGPU = CFAbsoluteTimeGetCurrent();
+        [gpuTimes addObject:@(endGPU - startGPU)];
+        
+        CFAbsoluteTime startCPU = CFAbsoluteTimeGetCurrent();
+        addArrayCPU(array1, array2, N);
+        CFAbsoluteTime endCPU = CFAbsoluteTimeGetCurrent();
+        [cpuTimes addObject:@(endCPU - startCPU)];
+
+        [NValues addObject:@(N)];
+        N <<= 1;
+    }
+    
+    NSString *NString = [NValues componentsJoinedByString:@", "];
+    NSString *gpuTimeString = [gpuTimes componentsJoinedByString:@", "];
+    NSString *cpuTimeString = [cpuTimes componentsJoinedByString:@", "];
+    NSLog(@"add_array_gpu/%@/%@", NString, gpuTimeString);
+    NSLog(@"add_array_cpu/%@/%@", NString, cpuTimeString);
+}
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        recordPerformance();
     }
     return 0;
 }
