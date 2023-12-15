@@ -19,10 +19,11 @@ const static std::unordered_map<std::string, std::pair<signpostFunc, signpostFun
 
 TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
     Trace trace_loop("loop", [](size_t n){
+        size_t sum = 0;
         for (size_t i = 0; i < n; ++i) {
-            // dummy
+            ++sum;
         } 
-    }, 6000000000, 1, 1);
+    }, 1000000, 10, 5);
     register_trace(trace_loop);
 
     Trace trace_threads("threads", [](size_t n) {
@@ -33,7 +34,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         for (int i = 0; i < n; ++i) {
             threads[i].join();
         }
-    }, 35000, 10, 1);
+    }, 10, 10, 5);
     register_trace(trace_threads);
 
     Trace trace_memory_copy("memory_copy", [](size_t n) {
@@ -42,7 +43,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         std::vector<int> dest(n, 0); 
 
         std::copy(src.begin(), src.end(), dest.begin());
-    }, 250000000, 2, 1);
+    }, 100000, 10, 5);
     register_trace(trace_memory_copy);
 
     Trace trace_memory_sort("memory_sort", [](size_t n) {
@@ -50,7 +51,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
         std::vector<int> data(n);
         std::generate(data.begin(), data.end(), std::rand);
         std::sort(data.begin(), data.end());
-    }, 60000000, 2, 1);
+    }, 10000, 10, 5);
     register_trace(trace_memory_sort);
 
     Trace trace_memory_search("memory_search", [](size_t n) {
@@ -63,7 +64,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
             int target = std::rand() % n;
             (void)std::binary_search(data.begin(), data.end(), target);
         }
-    }, 10000000, 2, 1);
+    }, 10000, 10, 5);
     register_trace(trace_memory_search);
 
     Trace trace_file_io("file_io", [](size_t n) {
@@ -88,7 +89,7 @@ TraceDriver::TraceDriver(const std::string& out_path) : out_path_(out_path) {
 
         // clean up
         std::remove(filename.c_str());
-    }, 5000000, 2, 1);
+    }, 1000, 10, 5);
     register_trace(trace_file_io);
 }
 
